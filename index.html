@@ -959,6 +959,8 @@
 
   .chapter-video{
     width:100%;
+    aspect-ratio:3/4;
+    object-fit:cover;
     display:block;
     border-radius:3px;
     border:1px solid var(--hairline);
@@ -1619,8 +1621,8 @@
 <div id="heart-layer"></div>
 
 <!-- BACKGROUND THEME MUSIC: main screen <-> full bloom, crossfades on scroll -->
-<audio id="bg-audio-main" src="girl_in_red_-_we_fell_in_love_in_october.mp3" preload="auto" loop></audio>
-<audio id="bg-audio-finale" src="finale_theme.mp3" preload="auto" loop></audio>
+<audio id="bg-audio-main" src="girl_in_red_-_we_fell_in_love_in_october.mp3" preload="metadata" loop></audio>
+<audio id="bg-audio-finale" src="finale_theme.mp3" preload="none" loop></audio>
 
 <!-- COVER -->
 <div id="cover">
@@ -1664,9 +1666,9 @@
       <p>Nothing happened. Nothing needed to. We just sat there staring each other shiviring slightly, and somehow it became one of the loveliest few mins I've known. Then ofc dad callED and u just rushing off like the hospital bout to collpase lol, then ofc the meeting continued by gods grace hospital became our date spot, THIS will be a fun story to tell our kids i bet heheheh</p>
     </div>
     <div class="split-media">
-      <video class="chapter-video" src="https://res.cloudinary.com/abtfjaa0/video/upload/v1789581560/5FFE6A7A-F487-4730-8316-3C23B894B837.mp4" playsinline preload="auto" loop muted autoplay disablePictureInPicture disableRemotePlayback></video>
+      <video class="chapter-video" src="https://res.cloudinary.com/abtfjaa0/video/upload/v1789581560/5FFE6A7A-F487-4730-8316-3C23B894B837.mp4" playsinline preload="none" loop muted disablePictureInPicture disableRemotePlayback></video>
       <div class="photo-grid" id="photo-grid-c2-a"></div>
-      <video class="chapter-video" src="https://res.cloudinary.com/abtfjaa0/video/upload/v1789635947/bj_ghf.mp4" playsinline preload="auto" loop muted autoplay disablePictureInPicture disableRemotePlayback></video>
+      <video class="chapter-video" src="https://res.cloudinary.com/abtfjaa0/video/upload/v1789635947/bj_ghf.mp4" playsinline preload="none" loop muted disablePictureInPicture disableRemotePlayback></video>
       <div class="photo-grid" id="photo-grid-c2-b"></div>
     </div>
   </div>
@@ -2438,16 +2440,28 @@
     });
   }
 
-  /* ---------------- chapter two videos: always looping, never pausable ---------------- */
-  document.querySelectorAll('.chapter-video').forEach(chapterVideo=>{
-    const keepPlaying = ()=> chapterVideo.play().catch(()=>{});
-    chapterVideo.addEventListener('pause', keepPlaying);
-    chapterVideo.addEventListener('loadeddata', keepPlaying);
-    document.addEventListener('visibilitychange', ()=>{
-      if(!document.hidden) keepPlaying();
-    });
-    keepPlaying();
-  });
+  /* ---------------- chapter two videos: play only while visible, never fight the browser's own pausing ----------------
+     iPhones can only hardware-decode a couple of videos at once. The old
+     approach force-resumed on every 'pause' event, which fought Safari's
+     own decoder-limit pausing and could thrash the CPU into a stall.
+     This version only ever calls play() when a video scrolls into view,
+     and lets it pause freely otherwise — no fighting, no controls, no
+     click-to-pause (pointer-events:none in CSS already blocks that). */
+  const chapterVideos = Array.from(document.querySelectorAll('.chapter-video'));
+  if(chapterVideos.length){
+    const videoVisibility = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        const v = entry.target;
+        if(entry.isIntersecting){
+          if(v.preload !== 'auto') v.preload = 'auto';
+          v.play().catch(()=>{});
+        } else {
+          v.pause();
+        }
+      });
+    }, { threshold:0.2, rootMargin:'200px 0px' });
+    chapterVideos.forEach(v=> videoVisibility.observe(v));
+  }
 
   buildFrames('photo-grid-c2-a',
     [
