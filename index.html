@@ -965,6 +965,7 @@
     background:linear-gradient(160deg, var(--panel-2), var(--onyx));
     box-shadow:0 20px 50px rgba(0,0,0,0.35);
     margin-bottom:16px;
+    pointer-events:none;
   }
 
   @media (max-width:820px){
@@ -1663,8 +1664,10 @@
       <p>Nothing happened. Nothing needed to. We just sat there staring each other shiviring slightly, and somehow it became one of the loveliest few mins I've known. Then ofc dad callED and u just rushing off like the hospital bout to collpase lol, then ofc the meeting continued by gods grace hospital became our date spot, THIS will be a fun story to tell our kids i bet heheheh</p>
     </div>
     <div class="split-media">
-      <video class="chapter-video" src="https://res.cloudinary.com/abtfjaa0/video/upload/v1789581560/5FFE6A7A-F487-4730-8316-3C23B894B837.mp4" controls playsinline preload="metadata" loop muted autoplay></video>
-      <div class="photo-grid" id="photo-grid-together"></div>
+      <video class="chapter-video" src="https://res.cloudinary.com/abtfjaa0/video/upload/v1789581560/5FFE6A7A-F487-4730-8316-3C23B894B837.mp4" playsinline preload="auto" loop muted autoplay disablePictureInPicture disableRemotePlayback></video>
+      <div class="photo-grid" id="photo-grid-c2-a"></div>
+      <video class="chapter-video" src="https://res.cloudinary.com/abtfjaa0/video/upload/v1789635947/bj_ghf.mp4" playsinline preload="auto" loop muted autoplay disablePictureInPicture disableRemotePlayback></video>
+      <div class="photo-grid" id="photo-grid-c2-b"></div>
     </div>
   </div>
 </section>
@@ -2435,19 +2438,34 @@
     });
   }
 
-  buildFrames('photo-grid-together',
+  /* ---------------- chapter two videos: always looping, never pausable ---------------- */
+  document.querySelectorAll('.chapter-video').forEach(chapterVideo=>{
+    const keepPlaying = ()=> chapterVideo.play().catch(()=>{});
+    chapterVideo.addEventListener('pause', keepPlaying);
+    chapterVideo.addEventListener('loadeddata', keepPlaying);
+    document.addEventListener('visibilitychange', ()=>{
+      if(!document.hidden) keepPlaying();
+    });
+    keepPlaying();
+  });
+
+  buildFrames('photo-grid-c2-a',
     [
-      'https://res.cloudinary.com/abtfjaa0/image/upload/v1789562678/Untitledgf_picture.png',
-      'https://res.cloudinary.com/abtfjaa0/image/upload/v1789562686/Untitlegfd_picture.png',
+      'https://res.cloudinary.com/abtfjaa0/image/upload/v1789562686/Untitlegfd_picture.png'
+    ],
+    ['us, somewhere good']
+  );
+  buildFrames('photo-grid-c2-b',
+    [
       'https://res.cloudinary.com/abtfjaa0/image/upload/v1789581686/jgjgcngbUntitledgf_picture.png'
     ],
-    ['us, somewhere ordinary','us, somewhere good','us, somewhere warm']
+    ['us, somewhere warm']
   );
   buildFrames('photo-grid-alone',
     [
       'https://res.cloudinary.com/abtfjaa0/image/upload/v1789581672/Untitled_picture.png',
       'https://res.cloudinary.com/abtfjaa0/image/upload/v1789562556/Untitled_pictdure.png',
-      ' https://res.cloudinary.com/abtfjaa0/image/upload/v1789562556/Untitled_pigfcture.png'
+      'https://res.cloudinary.com/abtfjaa0/image/upload/v1789562556/Untitled_pigfcture.png'
     ],
     ['Its your day my luv']
   );
