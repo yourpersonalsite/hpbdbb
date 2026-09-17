@@ -2339,6 +2339,13 @@
   });
   const navButtons = Array.from(nav.children);
 
+  // threshold:0 with a bottom rootMargin means "in-view" fires as soon as
+  // any part of a section enters the viewport, rather than requiring a
+  // fixed percentage of the section's total height to be visible at once.
+  // That percentage-based approach breaks for sections taller than the
+  // viewport — exactly what happens on phones, where content that sits
+  // side-by-side on desktop stacks into one tall column and can end up
+  // permanently stuck below the visibility threshold.
   const io = new IntersectionObserver((entries)=>{
     entries.forEach(entry=>{
       if(entry.isIntersecting){
@@ -2348,7 +2355,7 @@
         if(navButtons[idx]) navButtons[idx].classList.add('active');
       }
     });
-  }, { threshold:0.35 });
+  }, { threshold:0, rootMargin:'0px 0px -10% 0px' });
   sections.forEach(s=>io.observe(s));
 
   /* ---------------- hero text swap on return visit ---------------- */
