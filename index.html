@@ -2339,24 +2339,36 @@
   });
   const navButtons = Array.from(nav.children);
 
-  // threshold:0 with a bottom rootMargin means "in-view" fires as soon as
-  // any part of a section enters the viewport, rather than requiring a
-  // fixed percentage of the section's total height to be visible at once.
-  // That percentage-based approach breaks for sections taller than the
-  // viewport — exactly what happens on phones, where content that sits
-  // side-by-side on desktop stacks into one tall column and can end up
-  // permanently stuck below the visibility threshold.
-  const io = new IntersectionObserver((entries)=>{
-    entries.forEach(entry=>{
-      if(entry.isIntersecting){
-        entry.target.classList.add('in-view');
-        const idx = sections.indexOf(entry.target);
-        navButtons.forEach(b=>b.classList.remove('active'));
-        if(navButtons[idx]) navButtons[idx].classList.add('active');
+  // The chapter reveal used to rely on IntersectionObserver, but in-app
+  // browsers (WhatsApp, Instagram, etc. — stripped-down WebKit views, not
+  // full Safari) can handle IntersectionObserver unreliably, especially
+  // with rootMargin. This version just checks each section's position on
+  // every scroll — plain, boring, and works everywhere.
+  let sectionCheckQueued = false;
+  function updateSectionVisibility(){
+    sectionCheckQueued = false;
+    const viewportH = window.innerHeight;
+    let closestIdx = 0, closestDist = Infinity;
+    sections.forEach((sec, idx)=>{
+      const rect = sec.getBoundingClientRect();
+      if(rect.top < viewportH*0.92 && rect.bottom > 0){
+        sec.classList.add('in-view');
       }
+      const center = rect.top + rect.height/2;
+      const dist = Math.abs(center - viewportH/2);
+      if(dist < closestDist){ closestDist = dist; closestIdx = idx; }
     });
-  }, { threshold:0, rootMargin:'0px 0px -10% 0px' });
-  sections.forEach(s=>io.observe(s));
+    navButtons.forEach(b=>b.classList.remove('active'));
+    if(navButtons[closestIdx]) navButtons[closestIdx].classList.add('active');
+  }
+  function queueSectionCheck(){
+    if(sectionCheckQueued) return;
+    sectionCheckQueued = true;
+    requestAnimationFrame(updateSectionVisibility);
+  }
+  window.addEventListener('scroll', queueSectionCheck, { passive:true });
+  window.addEventListener('resize', queueSectionCheck);
+  updateSectionVisibility();
 
   /* ---------------- hero text swap on return visit ---------------- */
   // once you've scrolled down past the hero and come back up to it,
